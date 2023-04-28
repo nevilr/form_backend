@@ -1,6 +1,5 @@
-import werkzeug.exceptions
-from flask import Flask, render_template, request, redirect, url_for, jsonify, json
 from models import input_types, Form, db
+from flask import Flask, render_template, request, redirect, url_for, jsonify, json
 from datetime import datetime
 from config import settings
 
@@ -17,7 +16,16 @@ db.init_app(app)
 @app.route('/', methods=['GET'])
 def get_forms():
     forms = Form.query.all()
-    return {"forms": forms}
+    forms_list = []
+    for form in forms:
+        form_dict = {
+            # 'id': form.id,
+            'name': form.name,
+            'created_at': form.created_at,
+            'form_data': json.loads(form.form_data)
+        }
+        forms_list.append(form_dict)
+    return jsonify({'forms': forms_list})
 
 
 @app.route('/create_form', methods=['GET', 'POST'])
@@ -43,7 +51,12 @@ def create_form():
         db.session.add(form)
         db.session.commit()
 
-        return jsonify({'id': form.id, 'name': form.name, 'created_at': form.created_at, "form_data": form.form_data})
+        return jsonify({
+            'id': form.id,
+            'name': form.name,
+            'created_at': form.created_at,
+            "form_data": form.form_data
+        })
 
     return render_template('create_form.html', input_types=input_types)
 
@@ -69,7 +82,12 @@ def edit_form(form_id):
             form.name = name
         form.form_data = form_data
         db.session.commit()
-        return jsonify({'id': form.id, 'name': form.name, 'created_at': form.created_at, "form_data": form_data})
+        return jsonify({
+            'id': form.id,
+            'name': form.name,
+            'created_at': form.created_at,
+            "form_data": form_data
+        })
     return render_template('edit_form.html', form=form, input_types=input_types)
 
 
