@@ -17,6 +17,7 @@ db.init_app(app)
 def get_forms():
     forms = Form.query.all()
     forms_list = []
+
     for form in forms:
         form_dict = {
             # 'id': form.id,
@@ -25,6 +26,7 @@ def get_forms():
             'form_data': json.loads(form.form_data)
         }
         forms_list.append(form_dict)
+
     return jsonify({'forms': forms_list})
 
 
@@ -64,6 +66,7 @@ def create_form():
 @app.route('/edit_form/<int:form_id>', methods=['GET', 'PUT'])
 def edit_form(form_id):
     form = Form.query.get(form_id)
+
     if form is None:
         return {'error': 'Form not found'}
     if request.method == 'PUT':
@@ -78,10 +81,12 @@ def edit_form(form_id):
         #         return {"error": f"A form with the name: {name} already exists."}
 
         form_data = json.dumps(data.get('form_data'))
+
         if name is not None:
             form.name = name
         form.form_data = form_data
         db.session.commit()
+
         return jsonify({
             'id': form.id,
             'name': form.name,
@@ -94,10 +99,12 @@ def edit_form(form_id):
 @app.route('/delete_form/<int:form_id>', methods=['POST'])
 def delete_form(form_id):
     form = Form.query.get(form_id)
+
     if form is None:
         return {'error': 'Form not found'}
     db.session.delete(form)
     db.session.commit()
+
     return {"Message": "Form deleted"}
 
 
