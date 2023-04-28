@@ -20,7 +20,7 @@ def get_forms():
 
     for form in forms:
         form_dict = {
-            # 'id': form.id,
+            'id': form.id,
             'name': form.name,
             'created_at': form.created_at,
             'form_data': json.loads(form.form_data)
@@ -61,6 +61,7 @@ def create_form():
         })
 
     return render_template('create_form.html', input_types=input_types)
+    # return jsonify({"input_types": input_types})
 
 
 @app.route('/edit_form/<int:form_id>', methods=['GET', 'PUT'])
