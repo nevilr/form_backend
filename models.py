@@ -9,11 +9,11 @@ class Form(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255), nullable=False)
-    form_data = db.Column(db.Text)
+    data = db.Column(db.Text)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
-        return f'<Form {self.id}>'
+        return f"<Form {self.id}>"
 
 
 input_types = [
@@ -25,4 +25,4 @@ input_types = [
     {"name": "Radio", "value": "radio"},
     {"name": "Select", "value": "select"},
     {"name": "Textarea", "value": "textarea"},
-    ]
+]

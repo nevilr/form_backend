@@ -2,40 +2,60 @@ from models import input_types, Form, db
 from flask import Flask, render_template, request, redirect, url_for, jsonify, json
 from datetime import datetime
 from config import settings
+from flask_cors import CORS
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{settings.database_username}:{settings.database_password}' \
-                                        f'@{settings.database_hostname}:{settings.database_port}' \
-                                        f'/{settings.database_name}'
+CORS(app)
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    f"postgresql://{settings.database_username}:{settings.database_password}"
+    f"@{settings.database_hostname}:{settings.database_port}"
+    f"/{settings.database_name}"
+)
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
 
 
-@app.route('/', methods=['GET'])
+@app.route("/", methods=["GET"])
 def get_forms():
     forms = Form.query.all()
     forms_list = []
 
     for form in forms:
         form_dict = {
-            'id': form.id,
-            'name': form.name,
-            'created_at': form.created_at,
-            'form_data': json.loads(form.form_data)
+            "id": form.id,
+            "name": form.name,
+            "created_at": form.created_at,
+            "data": json.loads(form.data),
         }
         forms_list.append(form_dict)
 
-    return jsonify({'forms': forms_list})
+    return jsonify({"forms": forms_list})
 
 
-@app.route('/create_form', methods=['GET', 'POST'])
+@app.route("/<int:id>", methods=["GET"])
+def get_form(id):
+    form = Form.query.filter_by(id=id).first()
+    if not form:
+        return jsonify({"error": "Form not found"}), 404
+
+    form_dict = {
+        "id": form.id,
+        "name": form.name,
+        "created_at": form.created_at,
+        "data": json.loads(form.data),
+    }
+
+    return jsonify(form_dict)
+
+
+@app.route("/create_form", methods=["GET", "POST"])
 def create_form():
-    if request.method == 'POST':
+    if request.method == "POST":
         data = request.get_json()
-        name = data.get('name')
-        form_data = json.dumps(data.get('form_data'))
+        name = data.get("name")
+        data = json.dumps(data.get("data"))
 
         # check if a form with similar name already exists.
 
@@ -43,36 +63,38 @@ def create_form():
         # if existing_form:
         #     return {"error": f"A form with the name: {name} already exists."}
 
-        if not form_data:
-            return {'error': 'Form Data field is required'}
+        if not data:
+            return {"error": "Form Data field is required"}
 
         if not name:
-            return {'error': 'Name field is required'}
+            return {"error": "Name field is required"}
 
-        form = Form(name=name, form_data=form_data, created_at=datetime.utcnow())
+        form = Form(name=name, data=data, created_at=datetime.utcnow())
         db.session.add(form)
         db.session.commit()
 
-        return jsonify({
-            'id': form.id,
-            'name': form.name,
-            'created_at': form.created_at,
-            "form_data": form.form_data
-        })
+        return jsonify(
+            {
+                "id": form.id,
+                "name": form.name,
+                "created_at": form.created_at,
+                "data": form.data,
+            }
+        )
 
-    return render_template('create_form.html', input_types=input_types)
+    return render_template("create_form.html", input_types=input_types)
     # return jsonify({"input_types": input_types})
 
 
-@app.route('/edit_form/<int:form_id>', methods=['GET', 'PUT'])
+@app.route("/edit_form/<int:form_id>", methods=["GET", "PUT"])
 def edit_form(form_id):
     form = Form.query.get(form_id)
 
     if form is None:
-        return {'error': 'Form not found'}
-    if request.method == 'PUT':
+        return {"error": "Form not found"}
+    if request.method == "PUT":
         data = request.get_json()
-        name = data.get('name')
+        name = data.get("name")
 
         # check if a form with similar name already exists.
 
@@ -81,28 +103,30 @@ def edit_form(form_id):
         #     if name == existing_form.name:
         #         return {"error": f"A form with the name: {name} already exists."}
 
-        form_data = json.dumps(data.get('form_data'))
+        data = json.dumps(data.get("data"))
 
         if name is not None:
             form.name = name
-        form.form_data = form_data
+        form.data = data
         db.session.commit()
 
-        return jsonify({
-            'id': form.id,
-            'name': form.name,
-            'created_at': form.created_at,
-            "form_data": form_data
-        })
-    return render_template('edit_form.html', form=form, input_types=input_types)
+        return jsonify(
+            {
+                "id": form.id,
+                "name": form.name,
+                "created_at": form.created_at,
+                "data": data,
+            }
+        )
+    return render_template("edit_form.html", form=form, input_types=input_types)
 
 
-@app.route('/delete_form/<int:form_id>', methods=['POST'])
+@app.route("/delete_form/<int:form_id>", methods=["DELETE"])
 def delete_form(form_id):
     form = Form.query.get(form_id)
 
     if form is None:
-        return {'error': 'Form not found'}
+        return {"error": "Form not found"}
     db.session.delete(form)
     db.session.commit()
 
@@ -113,5 +137,5 @@ with app.app_context():
     db.create_all()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
