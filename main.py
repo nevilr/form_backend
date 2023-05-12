@@ -35,9 +35,9 @@ def get_forms():
     return jsonify({"forms": forms_list})
 
 
-@app.route("/<int:id>", methods=["GET"])
-def get_form(id):
-    form = Form.query.filter_by(id=id).first()
+@app.route("/<slug>", methods=["GET"])
+def get_form(slug):
+    form = Form.query.filter_by(slug=slug).first()
     if not form:
         return jsonify({"error": "Form not found"}), 404
 
@@ -52,7 +52,6 @@ def get_form(id):
     return jsonify(form_dict)
 
 
-# @app.route("/<int:id>")
 @app.route("/create_form", methods=["GET", "POST"])
 def create_form():
     if request.method == "POST":
@@ -91,9 +90,9 @@ def create_form():
     # return jsonify({"input_types": input_types})
 
 
-@app.route("/edit_form/<int:form_id>", methods=["GET", "PUT"])
-def edit_form(form_id):
-    form = Form.query.get(form_id)
+@app.route("/edit_form/<string:slug>", methods=["GET", "PUT"])
+def edit_form(slug):
+    form = Form.query.filter_by(slug=slug).first()
 
     if form is None:
         return {"error": "Form not found"}
@@ -138,9 +137,9 @@ def edit_form(form_id):
     return render_template("edit_form.html", form=form, input_types=input_types)
 
 
-@app.route("/delete_form/<int:form_id>", methods=["DELETE"])
-def delete_form(form_id):
-    form = Form.query.get(form_id)
+@app.route("/delete_form/<string:slug>", methods=["DELETE"])
+def delete_form(slug):
+    form = Form.query.filter_by(slug=slug).first()
 
     if form is None:
         return {"error": "Form not found"}

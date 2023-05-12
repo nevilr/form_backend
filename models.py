@@ -14,7 +14,7 @@ class Form(db.Model):
     slug = db.Column(db.String(255), nullable=False, unique=True)
 
     def __repr__(self):
-        return f"<Form {self.id}>"
+        return f"<Form {self.id} ({self.slug})>"
 
 
 class UserData(db.Model):
@@ -28,7 +28,7 @@ class UserData(db.Model):
     form = db.relationship("Form", backref=db.backref("user_data", lazy=True))
 
     def __repr__(self):
-        return f"<UserData {self.id}>"
+        return f"<UserData {self.slug}>"
 
 
 input_types = [
