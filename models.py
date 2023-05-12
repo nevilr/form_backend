@@ -11,9 +11,24 @@ class Form(db.Model):
     name = db.Column(db.String(255), nullable=False)
     data = db.Column(db.Text)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    slug = db.Column(db.String(255), nullable=False, unique=True)
 
     def __repr__(self):
         return f"<Form {self.id}>"
+
+
+class UserData(db.Model):
+    __tablename__ = "user_data"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    form_id = db.Column(db.Integer, db.ForeignKey("form.id"), nullable=False)
+    input_data = db.Column(db.Text)
+    subitted_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    form = db.relationship("Form", backref=db.backref("user_data", lazy=True))
+
+    def __repr__(self):
+        return f"<UserData {self.id}>"
 
 
 input_types = [

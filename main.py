@@ -1,4 +1,4 @@
-from models import input_types, Form, db
+from models import input_types, Form, db, UserData
 from flask import Flask, render_template, request, redirect, url_for, jsonify, json
 from datetime import datetime
 from config import settings
@@ -28,6 +28,7 @@ def get_forms():
             "name": form.name,
             "created_at": form.created_at,
             "data": json.loads(form.data),
+            "slug": form.slug,
         }
         forms_list.append(form_dict)
 
@@ -45,17 +46,20 @@ def get_form(id):
         "name": form.name,
         "created_at": form.created_at,
         "data": json.loads(form.data),
+        "slug": form.slug,
     }
 
     return jsonify(form_dict)
 
 
+# @app.route("/<int:id>")
 @app.route("/create_form", methods=["GET", "POST"])
 def create_form():
     if request.method == "POST":
-        data = request.get_json()
-        name = data.get("name")
-        data = json.dumps(data.get("data"))
+        form_data = request.get_json()
+        name = form_data.get("name")
+        slug = form_data.get("slug")
+        data = json.dumps(form_data.get("data"))
 
         # check if a form with similar name already exists.
 
@@ -69,7 +73,7 @@ def create_form():
         if not name:
             return {"error": "Name field is required"}
 
-        form = Form(name=name, data=data, created_at=datetime.utcnow())
+        form = Form(name=name, data=data, created_at=datetime.utcnow(), slug=slug)
         db.session.add(form)
         db.session.commit()
 
@@ -79,6 +83,7 @@ def create_form():
                 "name": form.name,
                 "created_at": form.created_at,
                 "data": form.data,
+                "slug": form.slug,
             }
         )
 
@@ -95,6 +100,7 @@ def edit_form(form_id):
     if request.method == "PUT":
         data = request.get_json()
         name = data.get("name")
+        slug = data.get("slug")
 
         # check if a form with similar name already exists.
 
@@ -105,8 +111,18 @@ def edit_form(form_id):
 
         data = json.dumps(data.get("data"))
 
+        # check if a form with similar slug already exists.
+        existing_form = Form.query.filter_by(slug=slug).first()
+
+        if existing_form:
+            return {"error": f"A form with the slug: {slug} already exists."}
+
         if name is not None:
             form.name = name
+
+        if slug is not None:
+            form.slug = slug
+
         form.data = data
         db.session.commit()
 
@@ -116,6 +132,7 @@ def edit_form(form_id):
                 "name": form.name,
                 "created_at": form.created_at,
                 "data": data,
+                "slug": form.slug,
             }
         )
     return render_template("edit_form.html", form=form, input_types=input_types)
