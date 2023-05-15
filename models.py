@@ -23,12 +23,12 @@ class UserData(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     form_id = db.Column(db.Integer, db.ForeignKey("form.id"), nullable=False)
     input_data = db.Column(db.Text)
-    subitted_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    submitted_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     form = db.relationship("Form", backref=db.backref("user_data", lazy=True))
 
     def __repr__(self):
-        return f"<UserData {self.slug}>"
+        return f"<UserData {self.id}>"
 
 
 input_types = [
